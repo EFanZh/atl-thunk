@@ -3,12 +3,16 @@
 
 //! Rust wrapper of [ATL thunk](https://learn.microsoft.com/en-us/windows/win32/api/atlthunk/) type.
 
+use ::windows::Win32::Foundation::{HWND, LPARAM, LRESULT, WPARAM};
+use ::windows::Win32::System::Memory::AtlThunkData_t;
+use ::windows::Win32::UI::WindowsAndMessaging::WNDPROC;
 use core::ffi::c_void;
 use core::mem;
 use core::ptr::NonNull;
-use windows::Win32::Foundation::{HWND, LPARAM, LRESULT, WPARAM};
-use windows::Win32::System::Memory::AtlThunkData_t;
-use windows::Win32::UI::WindowsAndMessaging::WNDPROC;
+
+pub mod windows {
+    pub use windows::Win32::Foundation::{HWND, LPARAM, LRESULT, WPARAM};
+}
 
 #[cfg_attr(
     target_arch = "x86",
@@ -49,11 +53,11 @@ pub struct AtlThunk {
 impl AtlThunk {
     /// Creates a new [`AtlThunk`] object.
     #[inline(always)]
-    pub fn try_new(procedure: RawWindowProcedure<usize>, first_parameter: usize) -> windows::core::Result<Self> {
+    pub fn try_new(procedure: RawWindowProcedure<usize>, first_parameter: usize) -> ::windows::core::Result<Self> {
         let thunk = unsafe { AtlThunk_AllocateData() };
 
         let Some(thunk) = NonNull::new(thunk) else {
-            return Err(windows::core::Error::from_win32());
+            return Err(::windows::core::Error::from_win32());
         };
 
         let mut result = Self { thunk };
