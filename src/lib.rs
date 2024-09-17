@@ -52,7 +52,6 @@ pub struct AtlThunk {
 
 impl AtlThunk {
     /// Creates a new [`AtlThunk`] object.
-    #[inline(always)]
     pub fn try_new(procedure: RawWindowProcedure<usize>, first_parameter: usize) -> ::windows::core::Result<Self> {
         let thunk = unsafe { AtlThunk_AllocateData() };
 
