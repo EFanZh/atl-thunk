@@ -6,7 +6,7 @@ keywords = ["atl", "thunk"]
 license = "MIT"
 name = "atl-thunk"
 repository = "https://github.com/EFanZh/atl-thunk"
-version = "0.1.2"
+version = "0.2.0"
 
 [package.metadata.docs.rs]
 default-target = "x86_64-pc-windows-msvc"
