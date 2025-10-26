@@ -6,13 +6,13 @@ keywords = ["atl", "thunk"]
 license = "MIT"
 name = "atl-thunk"
 repository = "https://github.com/EFanZh/atl-thunk"
-version = "0.2.0"
+version = "0.3.0"
 
 [package.metadata.docs.rs]
 default-target = "x86_64-pc-windows-msvc"
 
 [dependencies]
-windows = { version = "0.58", features = [
+windows = { version = "0.62", features = [
     "Win32_System_Memory",
     "Win32_UI_WindowsAndMessaging",
 ] }

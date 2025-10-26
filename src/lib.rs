@@ -55,7 +55,7 @@ impl AtlThunk {
     /// [`AtlThunk_AllocateData`](<https://learn.microsoft.com/en-us/windows/win32/api/atlthunk/nf-atlthunk-atlthunk_allocatedata>).
     pub fn try_new() -> ::windows::core::Result<Self> {
         match NonNull::new(unsafe { AtlThunk_AllocateData() }) {
-            None => Err(::windows::core::Error::from_win32()),
+            None => Err(::windows::core::Error::from_thread()),
             Some(raw_thunk_ptr) => Ok(Self { raw_thunk_ptr }),
         }
     }
