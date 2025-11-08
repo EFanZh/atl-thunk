@@ -5,7 +5,6 @@
 
 use ::windows::Win32::Foundation::{HWND, LPARAM, LRESULT, WPARAM};
 use ::windows::Win32::System::Memory::AtlThunkData_t;
-use ::windows::Win32::UI::WindowsAndMessaging::WNDPROC;
 use core::ffi::c_void;
 use core::mem;
 use core::ptr::NonNull;
@@ -14,31 +13,22 @@ pub mod windows {
     pub use ::windows::Win32::Foundation::{HWND, LPARAM, LRESULT, WPARAM};
 }
 
-#[cfg_attr(
-    target_arch = "x86",
-    link(
-        name = "atlthunk.dll",
-        kind = "raw-dylib",
-        modifiers = "+verbatim",
-        import_name_type = "undecorated"
-    )
-)]
-#[cfg_attr(
-    not(target_arch = "x86"),
-    link(name = "atlthunk.dll", kind = "raw-dylib", modifiers = "+verbatim")
-)]
-extern "system" {
-    /// <https://learn.microsoft.com/en-us/windows/win32/api/atlthunk/nf-atlthunk-atlthunk_allocatedata>.
-    fn AtlThunk_AllocateData() -> *mut AtlThunkData_t;
+mod ffi {
+    use ::windows::Win32::System::Memory::AtlThunkData_t;
+    use ::windows::Win32::UI::WindowsAndMessaging::WNDPROC;
+    use core::ffi::c_void;
 
-    /// <https://learn.microsoft.com/en-us/windows/win32/api/atlthunk/nf-atlthunk-atlthunk_datatocode>.
-    fn AtlThunk_DataToCode(thunk: *mut AtlThunkData_t) -> WNDPROC;
+    // <https://learn.microsoft.com/en-us/windows/win32/api/atlthunk/nf-atlthunk-atlthunk_allocatedata>.
+    ::windows::core::link!("atlthunk.dll" "system" fn AtlThunk_AllocateData() -> *mut AtlThunkData_t);
 
-    /// <https://learn.microsoft.com/en-us/windows/win32/api/atlthunk/nf-atlthunk-atlthunk_freedata>.
-    fn AtlThunk_FreeData(thunk: *mut AtlThunkData_t);
+    // <https://learn.microsoft.com/en-us/windows/win32/api/atlthunk/nf-atlthunk-atlthunk_datatocode>.
+    ::windows::core::link!("atlthunk.dll" "system" fn AtlThunk_DataToCode(thunk: *mut AtlThunkData_t) -> WNDPROC);
 
-    /// <https://learn.microsoft.com/en-us/windows/win32/api/atlthunk/nf-atlthunk-atlthunk_initdata>.
-    fn AtlThunk_InitData(thunk: *mut AtlThunkData_t, proc: *mut c_void, first_parameter: usize);
+    // <https://learn.microsoft.com/en-us/windows/win32/api/atlthunk/nf-atlthunk-atlthunk_freedata>.
+    ::windows::core::link!("atlthunk.dll" "system" fn AtlThunk_FreeData(thunk: *mut AtlThunkData_t));
+
+    // <https://learn.microsoft.com/en-us/windows/win32/api/atlthunk/nf-atlthunk-atlthunk_initdata>.
+    ::windows::core::link!("atlthunk.dll" "system" fn AtlThunk_InitData(thunk: *mut AtlThunkData_t, proc: *mut c_void, first_parameter: usize));
 }
 
 type WindowProcedure = unsafe extern "system" fn(HWND, u32, WPARAM, LPARAM) -> LRESULT;
@@ -54,7 +44,7 @@ impl AtlThunk {
     /// Creates a new [`AtlThunk`] object. For more information, see document for
     /// [`AtlThunk_AllocateData`](<https://learn.microsoft.com/en-us/windows/win32/api/atlthunk/nf-atlthunk-atlthunk_allocatedata>).
     pub fn try_new() -> ::windows::core::Result<Self> {
-        match NonNull::new(unsafe { AtlThunk_AllocateData() }) {
+        match NonNull::new(unsafe { ffi::AtlThunk_AllocateData() }) {
             None => Err(::windows::core::Error::from_thread()),
             Some(raw_thunk_ptr) => Ok(Self { raw_thunk_ptr }),
         }
@@ -86,7 +76,7 @@ impl AtlThunk {
     /// [`AtlThunk_DataToCode`](<https://learn.microsoft.com/en-us/windows/win32/api/atlthunk/nf-atlthunk-atlthunk_datatocode>).
     #[inline(always)]
     pub fn as_window_procedure(&self) -> WindowProcedure {
-        unsafe { AtlThunk_DataToCode(self.raw_thunk_ptr.as_ptr()).unwrap_unchecked() }
+        unsafe { ffi::AtlThunk_DataToCode(self.raw_thunk_ptr.as_ptr()).unwrap_unchecked() }
     }
 
     /// Updates the associated window procedure and data. For more information, see document for
@@ -99,7 +89,7 @@ impl AtlThunk {
 
             let first_parameter = mem::transmute::<HWND, usize>(first_parameter);
 
-            AtlThunk_InitData(self.raw_thunk_ptr.as_mut(), procedure, first_parameter);
+            ffi::AtlThunk_InitData(self.raw_thunk_ptr.as_mut(), procedure, first_parameter);
         }
     }
 }
@@ -109,7 +99,7 @@ impl Drop for AtlThunk {
     /// [`AtlThunk_FreeData`](<https://learn.microsoft.com/en-us/windows/win32/api/atlthunk/nf-atlthunk-atlthunk_freedata>).
     #[inline(always)]
     fn drop(&mut self) {
-        unsafe { AtlThunk_FreeData(self.raw_thunk_ptr.as_ptr()) };
+        unsafe { ffi::AtlThunk_FreeData(self.raw_thunk_ptr.as_ptr()) };
     }
 }
 
